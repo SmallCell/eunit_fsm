@@ -1,0 +1,14 @@
+{application, eunit_fsm,
+ [
+  {description, ""},
+  {vsn, "1.0.0"},
+  {modules, [eunit_fsm]},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { eunit_fsm_app, []}},
+  {env, []}
+ ]}.
+

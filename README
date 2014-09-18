@@ -1,0 +1,8 @@
+Dependencies
+. rebar
+. make
+
+Build
+To build the eunit_fsm library just run make.
+$ make
+
