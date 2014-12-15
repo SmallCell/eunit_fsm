@@ -8,7 +8,7 @@
 -ifndef(EUNIT_SEQ_TRACE_HRL).
 -define(EUNIT_SEQ_TRACE_HRL, true).
 
--define(_testTrace(Trace, Expr),
+-define(_testTraceSpec(Trace, Expr),
         {?LINE, fun () ->
                         %% SPAWN TRACES
                         Pid = spawn(eunit_seq_trace,tracer_spec,[Trace, self()]),
@@ -24,5 +24,28 @@
                 end
         }).
 
+-define(_testTrace(Expr),
+        {?LINE, fun () ->
+                        %% SPAWN TRACES
+                        Pid = spawn(eunit_seq_trace,tracer,[]),
+                        seq_trace:set_system_tracer(Pid), % set Pid as the system tracer
+                        %% SEED BLOCK
+                        (Expr)
+                end
+        }).
+
+-define(testTraceItit(Label, Tokens),
+        begin
+            ((fun () ->
+                      seq_trace:set_token(label, Label),
+                      lists:map(fun (T) -> seq_trace:set_token(T, true) end,Tokens)
+              end)()),
+            ok
+        end).
+
+-define(testTracePrint(Label, Msg), seq_trace:print(Label,Msg)).
+
+
 
 -endif. % EUNIT_SEQ_TRACE_HRL
+
