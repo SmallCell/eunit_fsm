@@ -16,6 +16,8 @@
 %%      ]  
 %%     }.
 
+-ifndef(EUNIT_FSM_HRL).
+-define(EUNIT_FSM_HRL, true).
 
 -define(_fsm_test(Id, Title, CmdList),
        {Title, fun() -> [eunit_fsm:translateCmd(Id, Cmd)
@@ -43,3 +45,5 @@
 	fun(Pid) -> ?_fsm_data(Pid, Data) end).
 
 -define(exit_on_error(F, E), case F of E -> exit(error); Other -> Other end).
+
+-endif. % EUNIT_FSM_HRL

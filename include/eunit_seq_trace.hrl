@@ -5,6 +5,9 @@
 %%% @end
 %%% Created : 15 Dec 2014 by vlad <lib.aca55a@gmail.com>
 
+-ifndef(EUNIT_SEQ_TRACE_HRL).
+-define(EUNIT_SEQ_TRACE_HRL, true).
+
 -define(_testTrace(Trace, Expr),
         {?LINE, fun () ->
                         %% SPAWN TRACES
@@ -22,3 +25,4 @@
         }).
 
 
+-endif. % EUNIT_SEQ_TRACE_HRL
