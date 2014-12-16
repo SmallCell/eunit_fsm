@@ -52,22 +52,23 @@ dialog_trace_test_() ->
              P = whereis(initiator),            
              P ! {port,message},
              receive after 300 -> ok end
-         end),
-
-      ?_testTraceSpec(
-         [
-          {print, initiator, "**** Trace Started ****"},
-          {'receive', initiator, call_server, {whereis(initiator), the_message}},
-          {print, call_server, "We are here now"},
-          %% {print, call_server, "We are here now"},
-          {'receive', call_server, initiator, {ack, {received,the_message}}}
-         ],
-         begin
-             register(initiator, spawn(?MODULE, loop_initiator, [port])),
-             register(call_server, spawn(?MODULE, loop_port_controller, [])),
-             P = whereis(initiator),            
-             P ! {port,message},
-             receive after 300 -> ok end
          end)
+     %% ,
+
+     %%  ?_testTraceSpec(
+     %%     [
+     %%      {print, initiator, "**** Trace Started ****"},
+     %%      {'receive', initiator, call_server, {whereis(initiator), the_message}},
+     %%      {print, call_server, "We are here now"},
+     %%      %% {print, call_server, "We are here now"},
+     %%      {'receive', call_server, initiator, {ack, {received,the_message}}}
+     %%     ],
+     %%     begin
+     %%         register(initiator, spawn(?MODULE, loop_initiator, [port])),
+     %%         register(call_server, spawn(?MODULE, loop_port_controller, [])),
+     %%         P = whereis(initiator),            
+     %%         P ! {port,message},
+     %%         receive after 300 -> ok end
+     %%     end)
      ]}.
 

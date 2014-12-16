@@ -6,7 +6,7 @@
 %%% Created : 15 Dec 2014 by vlad <lib.aca55a@gmail.com>
 
 -module(eunit_seq_trace).
--export([tracer/0, tracer_spec/2]).
+-export([tracer/0, tracer_spec/2,process_name/1]).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -44,13 +44,18 @@ tracer_spec_loop([Msg | Rest], Errors) ->
 
 
 process_name(Pid) ->
-    {registered_name, Name} = erlang:process_info(Pid, registered_name),
-    Name.
+    case erlang:process_info(Pid, registered_name) of
+        {registered_name, Name} -> Name;
+        undefined -> pid_to_list(Pid)
+    end.
+                                   
+-define(debug(Spec, Args),
+        io:fwrite(user, <<"~w: ~s\n">>, [self(), io_lib:format(Spec, Args)])).
 
 print_trace(Label,TraceInfo,false) ->
-    ?debugFmt("LB ~p: ~s",[Label, format_trace(TraceInfo)]);
+    ?debug("seq(~p)~s",[Label, format_trace(TraceInfo)]);
 print_trace(Label,TraceInfo,Ts) ->
-    ?debugFmt("LB ~p TS ~p: ~s",[Label,Ts, format_trace(TraceInfo)]).
+    ?debug("seq(~p)TS(~p)~s",[Label,Ts, format_trace(TraceInfo)]).
 
 format_trace({print,Serial,From,_,Info}) ->
     io_lib:format("~p print from '~p' : ~p", [Serial,process_name(From),Info]);
