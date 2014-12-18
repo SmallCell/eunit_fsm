@@ -42,12 +42,6 @@ tracer_spec_loop([Msg | Rest], Errors) ->
                end,
     tracer_spec_loop(MaybeMsg ++ Rest, Errors ++ ErrorPlus).
 
-
-process_name(Pid) ->
-    case erlang:process_info(Pid, registered_name) of
-        {registered_name, Name} -> Name;
-        undefined -> pid_to_list(Pid)
-    end.
                                    
 -define(debug(Spec, Args),
         io:fwrite(user, <<"~w: ~s\n">>, [self(), io_lib:format(Spec, Args)])).
@@ -55,7 +49,7 @@ process_name(Pid) ->
 print_trace(Label,TraceInfo,false) ->
     ?debug("seq(~p)~s",[Label, format_trace(TraceInfo)]);
 print_trace(Label,TraceInfo,Ts) ->
-    ?debug("seq(~p)TS(~p)~s",[Label,Ts, format_trace(TraceInfo)]).
+    ?debug("seq(~p)TS(~s)~s",[Label,timestamp(Ts), format_trace(TraceInfo)]).
 
 format_trace({print,Serial,From,_,Info}) ->
     io_lib:format("~p print from '~p' : ~p", [Serial,process_name(From),Info]);
@@ -92,9 +86,9 @@ compare_trace({Type, NameFrom, NameTo, ExpectedData},
             false
     end;
 compare_trace(_A, _B) ->
-    %% ?debugFmt(">> NOT ~p ~p", [A, B]),
     false.
 
+%% private functions
 
 struct_compare(LHS, RHS) when is_list(LHS), is_list(RHS) ->
     struct_compare_list(LHS, RHS);
@@ -111,4 +105,14 @@ struct_compare_list([], _RHS) -> false;
 struct_compare_list([L | LHS], [R | RHS]) ->
     struct_compare(L, R) and struct_compare_list(LHS, RHS).
 
+timestamp(Now) -> 
+    {_, _, Micros} = Now, 
+    {{YY, MM, DD}, {Hour, Min, Sec}} = calendar:now_to_local_time(Now), 
+    io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w.~p", 
+                  [YY, MM, DD, Hour, Min, Sec, Micros]).
 
+process_name(Pid) ->
+    case erlang:process_info(Pid, registered_name) of
+        {registered_name, Name} -> Name;
+        undefined -> pid_to_list(Pid)
+    end.
