@@ -10,16 +10,21 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-define(debug(Spec, Args),
+        io:fwrite(user, <<"~w: ~s\n">>, [self(), io_lib:format(Spec, Args)])).
+
 
 %% tracer code
 tracer() ->
-    receive
-        {seq_trace,Label,TraceInfo} ->
-           print_trace(Label,TraceInfo,false);
-        {seq_trace,Label,TraceInfo,Ts} ->
-           print_trace(Label,TraceInfo,Ts);
-        _Other -> ignore
-    end,
+    {LB, {_,_,From,To,_} = TI,TS} = receive
+                      {seq_trace,Label,TraceInfo} ->
+                          {Label,TraceInfo,false};
+                      {seq_trace,Label,TraceInfo,Ts} ->
+                          {Label,TraceInfo,Ts}
+                  end,
+    FromTo =  lists:subtract([process_name(From), process_name(To)], 
+                             [user, user_drv, error_logger, code_server]),
+    if length(FromTo) == 2 -> print_trace(LB, TI, TS); true -> ok end,
     tracer().
 
 tracer_spec(Spec, Master) ->
@@ -43,26 +48,22 @@ tracer_spec_loop([Msg | Rest], Errors) ->
     tracer_spec_loop(MaybeMsg ++ Rest, Errors ++ ErrorPlus).
 
                                    
--define(debug(Spec, Args),
-        io:fwrite(user, <<"~w: ~s\n">>, [self(), io_lib:format(Spec, Args)])).
-
 print_trace(Label,TraceInfo,false) ->
-    ?debug("seq(~p)~s",[Label, format_trace(TraceInfo)]);
+    ?debug(" seq(~p)~s",[Label, format_trace(TraceInfo)]);
 print_trace(Label,TraceInfo,Ts) ->
-    ?debug("seq(~p)TS(~s)~s",[Label,timestamp(Ts), format_trace(TraceInfo)]).
+    ?debug(" seq(~p)TS(~s)~s",[Label,timestamp(Ts), format_trace(TraceInfo)]).
 
 format_trace({print,Serial,From,_,Info}) ->
     io_lib:format("~p print from '~p' : ~p", [Serial,process_name(From),Info]);
 format_trace({'receive',Serial,From,To,Message}) ->
     io_lib:format("~p received '~p' <- '~p' : ~p",
-                 [Serial,process_name(To),process_name(From),Message]);
+                  [Serial,process_name(To),process_name(From),Message]);
 format_trace({send,Serial,From,To,Message}) ->
     io_lib:format("~p sent '~p' -> '~p' : ~p",
                  [Serial,process_name(From),process_name(To),Message]).
 
-
 check_trace(OneOf, TraceInfo) when is_list(OneOf) ->
-    Rest = lists:folfdl(fun(Msg, Acc) -> case check_trace(Msg, TraceInfo) of
+    Rest = lists:foldl(fun(Msg, Acc) -> case check_trace(Msg, TraceInfo) of
                                              true -> Acc; false -> [Msg | Acc]
                                          end end, [], OneOf),
     if Rest == [] -> []; true -> [Rest] end;
@@ -111,8 +112,16 @@ timestamp(Now) ->
     io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w.~p", 
                   [YY, MM, DD, Hour, Min, Sec, Micros]).
 
-process_name(Pid) ->
+process_name(Port) when is_port(Port)->
+    case erlang:port_info(Port,registered_name) of
+        {registered_name, Name} -> Name;
+        _ -> erlang:port_to_list(Port)                        
+    end;
+process_name(Pid) when is_pid(Pid)->
     case erlang:process_info(Pid, registered_name) of
         {registered_name, Name} -> Name;
-        undefined -> pid_to_list(Pid)
-    end.
+        _ -> pid_to_list(Pid)
+    end;
+process_name(_V) ->
+    ?debug(">>> ~p", [_V]),
+    noname.
