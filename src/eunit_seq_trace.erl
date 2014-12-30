@@ -23,7 +23,7 @@ tracer() ->
                           {Label,TraceInfo,Ts}
                   end,
     FromTo =  lists:subtract([process_name(From), process_name(To)], 
-                             [user, user_drv, error_logger, code_server]),
+                             [user, user_drv, error_logger, code_server, lager_event, file_server_2]),
     if length(FromTo) == 2 -> print_trace(LB, TI, TS); true -> ok end,
     tracer().
 
