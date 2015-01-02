@@ -123,5 +123,4 @@ process_name(Pid) when is_pid(Pid)->
         _ -> pid_to_list(Pid)
     end;
 process_name(_V) ->
-    ?debug(">>> ~p", [_V]),
     noname.
