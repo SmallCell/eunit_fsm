@@ -34,6 +34,10 @@
                 end
         }).
 
+-ifdef(NOTRACE).
+-define(testTraceItit(Label, Tokens), ok).
+-define(testTracePrint(Label, Msg), ok).
+-else.
 -define(testTraceItit(Label, Tokens),
         begin
             ((fun () ->
@@ -42,10 +46,9 @@
               end)()),
             ok
         end).
-
 -define(testTracePrint(Label, Msg), seq_trace:print(Label,Msg)).
 
-
+-endif.
 
 -endif. % EUNIT_SEQ_TRACE_HRL
 
