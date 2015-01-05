@@ -33,6 +33,9 @@
 -define(fsm_data(Id, Data),
 	eunit_fsm:translateCmd(Id, {loopdata,is,Data})).
 
+-define(srv_data(Id, Data),
+	eunit_fsm:translateCmd(Id, {srvdata,is,Data})).
+
 -define(_fsm_state(Id, StateName),
 	{??StateName, fun() -> ?fsm_state(Id, StateName) end}).
 
@@ -40,6 +43,8 @@
 	fun(Pid) -> ?_fsm_state(Pid, StateName) end).
 
 -define(_fsm_data(Id, Data), fun() -> ?fsm_data(Id, Data) end).
+
+-define(_srv_data(Id, Data), fun() -> ?srv_data(Id, Data) end).
 
 -define(_lift_fsm_data(Data),
 	fun(Pid) -> ?_fsm_data(Pid, Data) end).
