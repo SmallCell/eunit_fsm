@@ -24,8 +24,12 @@
 			 || Cmd <- CmdList]
 	       end}).
 
--define(_lift_fsm_test(Title, CmdList),
-	fun(Pid) -> ?_fsm_test(Pid, Title, CmdList) end).
+-define(_with_fsm_test(Title, CmdList),
+	fun(Pid) -> 
+            [eunit_fsm:translateCmd(Pid, Cmd)
+                          || Cmd <- CmdList]
+        end
+).
 
 -define(fsm_state(Id, StateName),
 	eunit_fsm:translateCmd(Id, {state,is,StateName})).
@@ -43,11 +47,12 @@
 	fun(Pid) -> ?_fsm_state(Pid, StateName) end).
 
 -define(_fsm_data(Id, Data), fun() -> ?fsm_data(Id, Data) end).
-
--define(_srv_data(Id, Data), fun() -> ?srv_data(Id, Data) end).
-
 -define(_lift_fsm_data(Data),
 	fun(Pid) -> ?_fsm_data(Pid, Data) end).
+
+-define(_srv_data(Id, Data), fun() -> ?srv_data(Id, Data) end).
+-define(_lift_srv_data(Data),
+	fun(Pid) -> ?_srv_data(Pid, Data) end).
 
 -define(exit_on_error(F, E), case F of E -> exit(error); Other -> Other end).
 
