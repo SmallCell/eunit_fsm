@@ -5,6 +5,8 @@
 
 -export([translateCmd/2, get_status/2]).
 
+-include_lib("eunit/include/eunit.hrl").
+
 -define(Expr(E),??E).
 
 get_status(Pid, Which) ->
@@ -43,7 +45,7 @@ translateCmd(Id, {callwith, M, F, A, X}) ->
 			     {expected, X},
 			     {value, V}]})
     end;
-%% gen_gsm
+%% gen_fsm
 translateCmd(Id, {loopdata, is, X}) ->
     case tl(tuple_to_list(get_status(Id, "StateData"))) of
 	X -> true;
@@ -54,8 +56,17 @@ translateCmd(Id, {loopdata, is, X}) ->
 			     {value, V}]})
     end;
 translateCmd(Id, {loopdata, match, Xs}) ->
-    Expected = lists:zip(Xs, tl(tuple_to_list(get_status(Id, "StateData")))),
-    lists:all(fun ({X, V}) -> compare(?LINE, X, V) end, Expected);
+    StateData = tl(tuple_to_list(get_status(Id, "StateData"))),
+    if length(Xs) /= length(StateData) ->
+             erlang:error({srvdata_match_failed,
+			    [{module, ?MODULE},
+			     {line, ?LINE},
+			     {expected, Xs},
+			     {value, StateData}]});
+       true -> 
+            Expected = lists:zip(Xs, StateData),
+            lists:all(fun ({X, V}) -> compare(?LINE, X, V) end, Expected)
+end;
 %% gen_server
 translateCmd(Id, {srvdata, is, X}) ->
     case tl(tuple_to_list(get_status(Id, "State"))) of
@@ -67,8 +78,17 @@ translateCmd(Id, {srvdata, is, X}) ->
 			     {value, V}]})
     end;
 translateCmd(Id, {srvdata, match, Xs}) ->
-    Expected = lists:zip(Xs, tl(tuple_to_list(get_status(Id, "State")))),
-    lists:all(fun ({X, V}) -> compare(?LINE, X, V) end, Expected);
+    State = tl(tuple_to_list(get_status(Id, "State"))),
+    if length(Xs) /= length(State) ->
+            erlang:error({srvdata_match_failed,
+                          [{module, ?MODULE},
+                           {line, ?LINE},
+                           {expected, Xs},
+                           {value, State}]});
+       true -> 
+            Expected = lists:zip(Xs, State),
+            lists:all(fun ({X, V}) -> compare(?LINE, X, V) end, Expected)
+    end;
 translateCmd(Id, {srvdata, show}) ->
     Data = tl(tuple_to_list(get_status(Id, "State"))),
     io:format(user, "srvdata: ~p~n", [Data]).
